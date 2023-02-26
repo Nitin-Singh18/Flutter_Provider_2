@@ -15,6 +15,7 @@ class MyApp extends StatelessWidget {
     return ChangeNotifierProvider(
       create: (context) => ObjectProvider(),
       child: MaterialApp(
+        debugShowCheckedModeBanner: false,
         title: 'Flutter Demo',
         theme: ThemeData(
           primarySwatch: Colors.blue,
@@ -63,7 +64,9 @@ class ObjectProvider extends ChangeNotifier {
   ObjectProvider()
       : id = const Uuid().v4(),
         _cheapObject = CheapObject(),
-        _expensiveObject = ExpensiveObject();
+        _expensiveObject = ExpensiveObject() {
+    start();
+  }
 
   //whenever we call notifyListeners(), we will reset our "id" field
   @override
@@ -98,6 +101,106 @@ class HomePage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Container();
+    return Scaffold(
+      appBar: AppBar(),
+      body: Column(children: [
+        Row(
+          children: const [
+            Expanded(child: CheapWidget()),
+            Expanded(child: ExpensiveWidget())
+          ],
+        ),
+        Row(
+          children: const [Expanded(child: ObjectProviderWidget())],
+        ),
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            TextButton(
+              onPressed: () {
+                context.read<ObjectProvider>().start();
+              },
+              child: const Text("Start"),
+            ),
+            TextButton(
+              onPressed: () {
+                context.read<ObjectProvider>().stop();
+              },
+              child: const Text("Stop"),
+            ),
+          ],
+        ),
+      ]),
+    );
+  }
+}
+
+class CheapWidget extends StatelessWidget {
+  const CheapWidget({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    //here we have a selected a particular field to watch for changes and rebuild
+    //iteself if any change is encountered
+    final cheapObject = context.select<ObjectProvider, CheapObject>(
+      (provider) => provider.cheapObject,
+    );
+    return Container(
+      height: 100,
+      color: Colors.yellow,
+      child: Column(
+        children: [
+          const Text("Cheap Widget"),
+          const Text("Last Updated"),
+          Text(cheapObject.lastUpdated),
+        ],
+      ),
+    );
+  }
+}
+
+class ExpensiveWidget extends StatelessWidget {
+  const ExpensiveWidget({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    //here we have a selected a particular field to watch for changes and rebuild
+    //widget if any change is encountered
+    final expensiveObject = context.select<ObjectProvider, ExpensiveObject>(
+      (provider) => provider.expensiveObject,
+    );
+    return Container(
+      height: 100,
+      color: Colors.blue,
+      child: Column(
+        children: [
+          const Text("Expensive Widget"),
+          const Text("Last Updated"),
+          Text(expensiveObject.lastUpdated),
+        ],
+      ),
+    );
+  }
+}
+
+class ObjectProviderWidget extends StatelessWidget {
+  const ObjectProviderWidget({super.key});
+
+  @override
+  Widget build(BuildContext context) {
+    //here we are watching the whole provider
+    //Any change in the provider will make the widget to rebuild
+    final provider = context.watch<ObjectProvider>();
+    return Container(
+      height: 100,
+      color: Colors.purple,
+      child: Column(
+        children: [
+          const Text("Object Provider Widget"),
+          const Text("ID"),
+          Text(provider.id),
+        ],
+      ),
+    );
   }
 }
